@@ -4,23 +4,22 @@ import yagmail
 
 class StockPriceNotification:
     def __init__(self,
-                 ticker,
                  email,
                  password):
-        self.ticker = ticker
-        self.email = "mail"
-        self.password = "pass"
-        self.stock_price = self.get_stock_price()
+        self.email = email
+        self.password = password
 
     # Functions used in stock price file and for general notifications
-    def get_stock_price(self):
-        return yf.Ticker(self.ticker).get_info()["regularMarketPrice"]
+    @staticmethod
+    def get_stock_price(ticker):
+        return yf.Ticker(ticker).get_info()["regularMarketPrice"]
 
-    def _initialize_receivers(self):
+    @staticmethod
+    def _initialize_receivers():
         mail_message = {
-            "mail_1": [f"Price for {self.ticker} is {self.stock_price}",
+            "mail_1": ["Price for ticker is stock_price",
                                           "Your dear scheduled script"],
-            "mail_2": [f"Price for {self.ticker} is {self.stock_price}",
+            "mail_2": ["Price for ticker is stock_price",
                                    "Tell Irakli about this mail"]
         }
         return mail_message
@@ -29,9 +28,13 @@ class StockPriceNotification:
         yag = yagmail.SMTP(self.email, self.password)
         return yag
 
-    def send_mail(self):
+    def send_mail(self, ticker):
         mail_message = self._initialize_receivers()
         yag = self._initialize_mail_client()
+        stock_price = self.get_stock_price(ticker)
         for i in mail_message.keys():
-            yag.send(i, mail_message[i][0], mail_message[i][1])
+            subject = mail_message[i][0].replace("ticker", str(ticker))
+            subject = subject.replace("stock_price", str(stock_price))
+            body = mail_message[i][1]
+            yag.send(i, subject, body)
         print("Done Sending")
