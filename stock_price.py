@@ -1,24 +1,34 @@
-import pandas as pd
+import os
+import sys
+
 import yfinance as yf
-from utils import stock_functions
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-ticker = "MSFT"
+CURRENT_DIR = os.path.dirname(os.path.abspath("C:\\Users\\Irakli Salia\\OneDrive\\IRAKLI\\stock_price_notification\\stock_price_notification\\utils\\stock_notif_class.py"))
+sys.path.append(os.path.dirname(CURRENT_DIR))
+from utils import stock_notif_class
 
+tickers = ["AAPL", "NVDA", "MSFT", "VORB", "TSLA", "EPAM"]
+price_dict = {}
 
-#
-# price_history_tick = yf.Ticker(ticker).history(period='2d',  # valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
-#                                    interval='1d',  # valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
-#                                    actions=False)
-# price_history_tick = pd.DataFrame(price_history_tick)
-#
-# price_history_tick.iloc[0]
+for ticker in tickers:
+    price_dict[ticker + str("_yesterday")] = yf.Ticker(ticker).history(period='2d', interval='1d', actions=False)\
+                                                    .iloc[0]["Close"]
+
 
 def some_job():
-    spn = stock_functions.StockPriceNotification(email="mail", password="pass")
-    spn.send_mail("MSFT")
+    spn = stock_notif_class.StockPriceNotification(email="mail", password="pass")
+    for ticker in tickers:
+        price_dict[ticker + str("_today")] = spn.get_stock_price(ticker)
+        # Calculate decrease percentage
+        price_today = price_dict[ticker + str("_today")]
+        price_yesterday = price_dict[ticker + str("_yesterday")]
+        diff = round(abs((price_today - price_yesterday) / price_yesterday),2)
+        diff *= 100
+        if diff >= 4:
+            spn.send_mail(ticker, diff)
 
 
 scheduler = BlockingScheduler()
-scheduler.add_job(some_job, 'interval', hours=1 / 60, max_instances=5)
+scheduler.add_job(some_job, 'interval', hours=1/6, max_instances=5)
 scheduler.start()

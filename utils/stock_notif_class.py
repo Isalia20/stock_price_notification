@@ -17,9 +17,9 @@ class StockPriceNotification:
     @staticmethod
     def _initialize_receivers():
         mail_message = {
-            "mail_1": ["Price for ticker is stock_price",
+            "irakli.salia854@gmail.com": ["ticker is down percentage_down %",
                                           "Your dear scheduled script"],
-            "mail_2": ["Price for ticker is stock_price",
+            "elizkhel@gmail.com": ["ticker is down percentage_down %",  # ticker and percentage_down get replaced below
                                    "Tell Irakli about this mail"]
         }
         return mail_message
@@ -28,13 +28,13 @@ class StockPriceNotification:
         yag = yagmail.SMTP(self.email, self.password)
         return yag
 
-    def send_mail(self, ticker):
+    def send_mail(self, ticker, percentage_fall):
         mail_message = self._initialize_receivers()
         yag = self._initialize_mail_client()
-        stock_price = self.get_stock_price(ticker)
+        # stock_price = self.get_stock_price(ticker)
         for i in mail_message.keys():
             subject = mail_message[i][0].replace("ticker", str(ticker))
-            subject = subject.replace("stock_price", str(stock_price))
+            subject = subject.replace("percentage_down", str(percentage_fall))
             body = mail_message[i][1]
             yag.send(i, subject, body)
         print("Done Sending")
